@@ -7,12 +7,13 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || 'default-secret',
 
   firebase: {
-    projectId: process.env.FIREBASE_PROJECT_ID?.replace(/^"|"$/g, '') || '',
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL?.replace(/^"|"$/g, '') || '',
+    projectId: process.env.FIREBASE_PROJECT_ID?.replace(/['"]/g, '') || '',
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL?.replace(/['"]/g, '') || '',
     privateKey: (process.env.FIREBASE_PRIVATE_KEY || '')
-      .replace(/^"|"$/g, '') // remove surrounding quotes if accidentally copied
-      .replace(/\\n/g, '\n'), // replace escaped literal \n with real newline
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET?.replace(/^"|"$/g, '') || '',
+      .replace(/['"]/g, '') // Aggressively remove all quotes
+      .replace(/\\n/g, '\n') // Convert literal \n to actual newlines
+      .trim(), // Remove extra spaces
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET?.replace(/['"]/g, '') || '',
   },
 
   groqApiKey: process.env.GROQ_API_KEY || '',
