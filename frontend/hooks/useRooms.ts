@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { roomService } from '@/services/roomService';
 import { Room } from '@/types';
 
-export function useRooms() {
+export function useRooms(userId?: string) {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,8 +23,13 @@ export function useRooms() {
   }, []);
 
   useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
+    // Only fetch rooms once we have an authenticated user
+    if (userId) {
+      fetchRooms();
+    } else {
+      setLoading(false);
+    }
+  }, [fetchRooms, userId]);
 
   const createRoom = async (roomName: string) => {
     const room = await roomService.createRoom(roomName);

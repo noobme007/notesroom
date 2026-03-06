@@ -22,7 +22,7 @@ import toast from 'react-hot-toast';
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { rooms, loading: roomsLoading, createRoom, joinRoom } = useRooms();
+  const { rooms, loading: roomsLoading, createRoom, joinRoom } = useRooms(user?._id);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
 

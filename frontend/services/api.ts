@@ -27,12 +27,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid — redirect to login
-      if (typeof window !== 'undefined') {
-        window.location.href = '/';
-      }
-    }
+    // Let individual components handle errors — do NOT globally redirect
+    // A 401 on room fetches was causing an infinite redirect loop
     return Promise.reject(error);
   }
 );
