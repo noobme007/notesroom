@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useFolders } from '@/hooks/useFolders';
@@ -24,11 +24,11 @@ import {
 import toast from 'react-hot-toast';
 
 interface RoomPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export default function RoomPage({ params }: RoomPageProps) {
-  const { id: roomId } = use(params);
+  const roomId = params.id;
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [room, setRoom] = useState<Room | null>(null);
@@ -157,9 +157,8 @@ export default function RoomPage({ params }: RoomPageProps) {
           </button>
           <button
             onClick={() => setChatOpen(!chatOpen)}
-            className={`btn-ghost text-sm flex items-center gap-1.5 ${
-              chatOpen ? 'text-primary-400' : ''
-            }`}
+            className={`btn-ghost text-sm flex items-center gap-1.5 ${chatOpen ? 'text-primary-400' : ''
+              }`}
           >
             <FiMessageSquare className="w-4 h-4" />
             <span className="hidden sm:inline">AI Chat</span>
