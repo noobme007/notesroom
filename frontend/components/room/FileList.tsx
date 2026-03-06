@@ -12,6 +12,7 @@ import {
   FiLoader,
 } from 'react-icons/fi';
 import { FileItem, RoomRole } from '@/types';
+import toast from 'react-hot-toast';
 
 interface FileListProps {
   files: FileItem[];
@@ -125,14 +126,25 @@ export function FileList({
                   >
                     <FiEye className="w-4 h-4" />
                   </button>
-                  <a
-                    href={file.fileUrl}
-                    download={file.fileName}
+                  <button
+                    onClick={async () => {
+                      try {
+                        const { fileService } = await import('@/services/fileService');
+                        const data = await fileService.getPreviewUrl(file._id);
+                        const a = document.createElement('a');
+                        a.href = data.previewUrl;
+                        a.target = '_blank';
+                        a.download = file.fileName;
+                        a.click();
+                      } catch (err) {
+                        toast.error('Failed to get download link');
+                      }
+                    }}
                     className="p-2 text-dark-400 hover:text-green-400 hover:bg-dark-700 rounded-lg transition-colors"
                     title="Download"
                   >
                     <FiDownload className="w-4 h-4" />
-                  </a>
+                  </button>
                   {canDelete && (
                     <button
                       onClick={() => onDelete(file._id)}

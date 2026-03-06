@@ -27,8 +27,12 @@ export const uploadToFirebase = async (
     },
   });
 
-  // Make the file publicly readable
-  await file.makePublic();
+  // Try to make the file publicly readable (may fail if Uniform Bucket-Level Access is enforced)
+  try {
+    await file.makePublic();
+  } catch (err) {
+    console.warn('Could not make file public (ACLs might be disabled on bucket). File upload will continue.', err);
+  }
 
   const fileUrl = `https://storage.googleapis.com/${firebaseStorage.name}/${storagePath}`;
 
