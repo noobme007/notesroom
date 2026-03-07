@@ -38,7 +38,7 @@ export const env = {
   supabase: {
     url: process.env.SUPABASE_URL || '',
     serviceKey: process.env.SUPABASE_SERVICE_KEY || '',
-    bucket: process.env.SUPABASE_BUCKET || 'studyroom-files',
+    bucket: process.env.SUPABASE_BUCKET || 'notesroom-files',
   },
 
   groqApiKey: process.env.GROQ_API_KEY || '',
