@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { File, Folder, RoomMember, TextChunk } from '../models';
-import { uploadToFirebase, deleteFromFirebase, getSignedUrl } from '../services/storageService';
+import { uploadToCloudStorage, deleteFromCloudStorage, getSignedUrl } from '../services/storageService';
 import { processDocument } from '../services/documentProcessor';
 import { isAllowedFileType } from '../utils/helpers';
 
@@ -42,8 +42,8 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Upload to Firebase Storage
-    const { fileUrl, storagePath } = await uploadToFirebase(
+    // Upload to Supabase Storage
+    const { fileUrl, storagePath } = await uploadToCloudStorage(
       uploadedFile.buffer,
       uploadedFile.originalname,
       uploadedFile.mimetype,
@@ -129,8 +129,8 @@ export const deleteFile = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Delete from Firebase Storage
-    await deleteFromFirebase(file.storagePath);
+    // Delete from Supabase Storage
+    await deleteFromCloudStorage(file.storagePath);
 
     // Delete text chunks
     await TextChunk.deleteMany({ fileId: file._id });

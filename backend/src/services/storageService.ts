@@ -1,10 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
-import { firebaseStorage } from '../config/firebase';
+import { supabase } from '../config/supabase';
+import { env } from '../config/env';
+
+const BUCKET_NAME = env.supabase.bucket;
 
 /**
- * Upload a file to Firebase Storage.
+ * Upload a file to Cloud Storage (Supabase).
  */
-export const uploadToFirebase = async (
+export const uploadToCloudStorage = async (
   fileBuffer: Buffer,
   originalName: string,
   mimeType: string,
@@ -14,40 +17,38 @@ export const uploadToFirebase = async (
   const ext = originalName.split('.').pop() || '';
   const storagePath = `rooms/${roomId}/${folderId}/${uuidv4()}.${ext}`;
 
-  const file = firebaseStorage.file(storagePath);
-
-  await file.save(fileBuffer, {
-    metadata: {
+  const { data, error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(storagePath, fileBuffer, {
       contentType: mimeType,
-      metadata: {
-        originalName,
-        roomId,
-        folderId,
-      },
-    },
-  });
+      cacheControl: '3600',
+      upsert: false,
+    });
 
-  // Try to make the file publicly readable (may fail if Uniform Bucket-Level Access is enforced)
-  try {
-    await file.makePublic();
-  } catch (err) {
-    console.warn('Could not make file public (ACLs might be disabled on bucket). File upload will continue.', err);
+  if (error) {
+    console.error('Supabase upload error:', error);
+    throw new Error('Failed to upload file to storage');
   }
 
-  const fileUrl = `https://storage.googleapis.com/${firebaseStorage.name}/${storagePath}`;
+  // Generate public URL (assuming the bucket is public; if private, ignore this URL as we use presigned URLs anyway)
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
 
-  return { fileUrl, storagePath };
+  return { fileUrl: publicUrl, storagePath };
 };
 
 /**
- * Delete a file from Firebase Storage.
+ * Delete a file from Cloud Storage (Supabase).
  */
-export const deleteFromFirebase = async (storagePath: string): Promise<void> => {
+export const deleteFromCloudStorage = async (storagePath: string): Promise<void> => {
   try {
-    const file = firebaseStorage.file(storagePath);
-    await file.delete();
+    const { error } = await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
+    if (error) {
+      console.error('Error deleting file from Supabase:', error);
+    }
   } catch (error) {
-    console.error('Error deleting file from Firebase:', error);
+    console.error('Error deleting file from Supabase exception:', error);
   }
 };
 
@@ -58,12 +59,14 @@ export const getSignedUrl = async (
   storagePath: string,
   expiresInMinutes: number = 60
 ): Promise<string> => {
-  const file = firebaseStorage.file(storagePath);
+  const { data, error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .createSignedUrl(storagePath, expiresInMinutes * 60);
 
-  const [url] = await file.getSignedUrl({
-    action: 'read',
-    expires: Date.now() + expiresInMinutes * 60 * 1000,
-  });
+  if (error || !data) {
+    console.error('Error getting signed URL from Supabase:', error);
+    throw new Error('Could not generate signed URL');
+  }
 
-  return url;
+  return data.signedUrl;
 };
