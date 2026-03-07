@@ -9,26 +9,38 @@ export function useFiles(folderId: string | null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFiles = useCallback(async () => {
+  const fetchFiles = useCallback(async (showLoading = true) => {
     if (!folderId) {
       setFiles([]);
       return;
     }
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const data = await fileService.listFiles(folderId);
       setFiles(data);
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to fetch files');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, [folderId]);
 
   useEffect(() => {
-    fetchFiles();
+    fetchFiles(true);
   }, [fetchFiles]);
+
+  // Handle auto-polling for files that are currently processing
+  useEffect(() => {
+    const hasProcessingFiles = files.some((f) => !f.processed);
+    if (!hasProcessingFiles) return;
+
+    const intervalId = setInterval(() => {
+      fetchFiles(false); // poll silently without loading spinner
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [files, fetchFiles]);
 
   const uploadFile = async (file: File) => {
     if (!folderId) throw new Error('No folder selected');

@@ -108,17 +108,18 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
 export const getChatHistory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { roomId } = req.params;
+    const userId = req.user!._id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 50;
     const skip = (page - 1) * limit;
 
-    const messages = await ChatMessage.find({ roomId })
+    const messages = await ChatMessage.find({ roomId, userId })
       .populate('userId', 'name profilePicture')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await ChatMessage.countDocuments({ roomId });
+    const total = await ChatMessage.countDocuments({ roomId, userId });
 
     res.json({
       messages: messages.reverse(),
