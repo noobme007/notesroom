@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { Room, RoomMember, User } from '../models';
+import { Room, RoomMember, User, Folder, File, TextChunk, ChatMessage } from '../models';
 import { generateUniqueRoomCode } from '../utils/roomCode';
 
 /**
@@ -231,5 +231,47 @@ export const removeMember = async (req: AuthRequest, res: Response): Promise<voi
   } catch (error) {
     console.error('Remove member error:', error);
     res.status(500).json({ error: 'Failed to remove member' });
+  }
+};
+
+/**
+ * DELETE /api/rooms/:id
+ * Delete a room (admin only).
+ */
+export const deleteRoom = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!._id;
+
+    const room = await Room.findById(id);
+    if (!room) {
+      res.status(404).json({ error: 'Room not found' });
+      return;
+    }
+
+    // Check admin permission
+    const membership = await RoomMember.findOne({
+      userId,
+      roomId: id,
+      role: 'admin',
+    });
+
+    if (!membership) {
+      res.status(403).json({ error: 'Only admins can delete a room' });
+      return;
+    }
+
+    // Delete all linked documents natively from MongoDB
+    await RoomMember.deleteMany({ roomId: id });
+    await Folder.deleteMany({ roomId: id });
+    await File.deleteMany({ roomId: id });
+    await TextChunk.deleteMany({ roomId: id });
+    await ChatMessage.deleteMany({ roomId: id });
+    await Room.findByIdAndDelete(id);
+
+    res.json({ message: 'Room deleted successfully' });
+  } catch (error) {
+    console.error('Delete room error:', error);
+    res.status(500).json({ error: 'Failed to delete room' });
   }
 };

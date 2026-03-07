@@ -55,4 +55,11 @@ export const roomService = {
   async removeMember(roomId: string, userId: string): Promise<void> {
     await api.delete(`/rooms/${roomId}/members/${userId}`);
   },
+
+  /**
+   * Delete an entire room (admin only).
+   */
+  async deleteRoom(roomId: string): Promise<void> {
+    await api.delete(`/rooms/${roomId}`);
+  },
 };

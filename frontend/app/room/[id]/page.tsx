@@ -20,6 +20,7 @@ import {
   FiMessageSquare,
   FiLoader,
   FiBookOpen,
+  FiTrash2,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -125,6 +126,17 @@ export default function RoomPage({ params }: RoomPageProps) {
     toast.success('Room code copied!');
   };
 
+  const handleDeleteRoom = async () => {
+    if (!confirm('Are you sure you want to completely delete this room? This action cannot be undone.')) return;
+    try {
+      await roomService.deleteRoom(roomId);
+      toast.success('Room deleted successfully');
+      router.push('/dashboard');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to delete room');
+    }
+  };
+
   return (
     <div className="h-screen bg-dark-950 flex flex-col">
       {/* Top Bar */}
@@ -148,6 +160,16 @@ export default function RoomPage({ params }: RoomPageProps) {
           </button>
         </div>
         <div className="flex items-center gap-2">
+          {userRole === 'admin' && (
+            <button
+              onClick={handleDeleteRoom}
+              className="btn-ghost text-sm flex items-center gap-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+              title="Delete Room"
+            >
+              <FiTrash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Delete Room</span>
+            </button>
+          )}
           <button
             onClick={() => setMembersOpen(true)}
             className="btn-ghost text-sm flex items-center gap-1.5"
