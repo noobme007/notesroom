@@ -11,6 +11,7 @@ import { ChatPanel } from '@/components/room/ChatPanel';
 import { MembersPanel } from '@/components/room/MembersPanel';
 import { FileUploadModal } from '@/components/modals/FileUploadModal';
 import { FilePreviewModal } from '@/components/modals/FilePreviewModal';
+import { ConfirmModal } from '@/components/modals/ConfirmModal';
 import { roomService } from '@/services/roomService';
 import { Room, FileItem, RoomRole } from '@/types';
 import {
@@ -40,6 +41,18 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [membersOpen, setMembersOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: async () => { },
+  });
 
   const { folders, createFolder, deleteFolder } = useFolders(roomId);
   const { files, loading: filesLoading, uploadFile, deleteFile } = useFiles(selectedFolderId);
@@ -91,13 +104,20 @@ export default function RoomPage({ params }: RoomPageProps) {
   };
 
   const handleDeleteFile = async (fileId: string) => {
-    if (!confirm('Delete this file?')) return;
-    try {
-      await deleteFile(fileId);
-      toast.success('File deleted');
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Delete failed');
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete File',
+      message: 'Are you sure you want to delete this file? This action cannot be undone.',
+      confirmText: 'Delete File',
+      onConfirm: async () => {
+        try {
+          await deleteFile(fileId);
+          toast.success('File deleted');
+        } catch (err: any) {
+          toast.error(err.response?.data?.error || 'Delete failed');
+        }
+      },
+    });
   };
 
   const handleCreateFolder = async (name: string) => {
@@ -111,14 +131,22 @@ export default function RoomPage({ params }: RoomPageProps) {
   };
 
   const handleDeleteFolder = async (folderId: string) => {
-    if (!confirm('Delete this folder?')) return;
-    try {
-      await deleteFolder(folderId);
-      if (selectedFolderId === folderId) setSelectedFolderId(null);
-      toast.success('Folder deleted');
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Failed to delete folder');
-    }
+    const folder = folders.find(f => f._id === folderId);
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Folder',
+      message: `Are you sure you want to delete "${folder?.folderName}"? All files inside will be lost.`,
+      confirmText: 'Delete Folder',
+      onConfirm: async () => {
+        try {
+          await deleteFolder(folderId);
+          if (selectedFolderId === folderId) setSelectedFolderId(null);
+          toast.success('Folder deleted');
+        } catch (err: any) {
+          toast.error(err.response?.data?.error || 'Failed to delete folder');
+        }
+      },
+    });
   };
 
   const copyCode = () => {
@@ -127,14 +155,21 @@ export default function RoomPage({ params }: RoomPageProps) {
   };
 
   const handleDeleteRoom = async () => {
-    if (!confirm('Are you sure you want to completely delete this room? This action cannot be undone.')) return;
-    try {
-      await roomService.deleteRoom(roomId);
-      toast.success('Room deleted successfully');
-      router.push('/dashboard');
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Failed to delete room');
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Study Room',
+      message: `Are you sure you want to completely delete "${room.roomName}"? This action is permanent and cannot be undone.`,
+      confirmText: 'Delete Everything',
+      onConfirm: async () => {
+        try {
+          await roomService.deleteRoom(roomId);
+          toast.success('Room deleted successfully');
+          router.push('/dashboard');
+        } catch (err: any) {
+          toast.error(err.response?.data?.error || 'Failed to delete room');
+        }
+      },
+    });
   };
 
   return (
@@ -242,6 +277,15 @@ export default function RoomPage({ params }: RoomPageProps) {
           fileName={previewFile.fileName}
         />
       )}
+
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+      />
     </div>
   );
 }

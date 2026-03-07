@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiX, FiUsers, FiShield, FiEdit3, FiEye, FiTrash2, FiLoader } from 'react-icons/fi';
 import { roomService } from '@/services/roomService';
 import { RoomMember, RoomRole } from '@/types';
+import { ConfirmModal } from '../modals/ConfirmModal';
 
 interface MembersPanelProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface MembersPanelProps {
 export function MembersPanel({ isOpen, onClose, roomId, userRole }: MembersPanelProps) {
   const [members, setMembers] = useState<RoomMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [memberToRemove, setMemberToRemove] = useState<RoomMember | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -44,10 +46,14 @@ export function MembersPanel({ isOpen, onClose, roomId, userRole }: MembersPanel
     }
   };
 
-  const removeMember = async (userId: string) => {
-    if (!confirm('Remove this member from the room?')) return;
+  const removeMember = async (member: RoomMember) => {
+    setMemberToRemove(member);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!memberToRemove) return;
     try {
-      await roomService.removeMember(roomId, userId);
+      await roomService.removeMember(roomId, memberToRemove.user._id);
       await loadMembers();
     } catch (err) {
       console.error('Error removing member:', err);
@@ -125,7 +131,7 @@ export function MembersPanel({ isOpen, onClose, roomId, userRole }: MembersPanel
                       <option value="admin">Admin</option>
                     </select>
                     <button
-                      onClick={() => removeMember(member.user._id)}
+                      onClick={() => removeMember(member)}
                       className="text-dark-400 hover:text-red-400 p-1"
                       title="Remove member"
                     >
@@ -138,6 +144,15 @@ export function MembersPanel({ isOpen, onClose, roomId, userRole }: MembersPanel
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={!!memberToRemove}
+        onClose={() => setMemberToRemove(null)}
+        onConfirm={handleConfirmRemove}
+        title="Remove Member"
+        message={`Are you sure you want to remove ${memberToRemove?.user.name} from this study room?`}
+        confirmText="Remove Member"
+      />
     </div>
   );
 }

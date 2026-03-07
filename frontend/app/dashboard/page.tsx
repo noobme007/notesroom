@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useRooms } from '@/hooks/useRooms';
 import { CreateRoomModal, JoinRoomModal } from '@/components/modals/RoomModals';
+import { ConfirmModal } from '@/components/modals/ConfirmModal';
 import {
   FiPlus,
   FiLogIn,
@@ -18,7 +19,7 @@ import {
   FiEye,
   FiTrash2,
 } from 'react-icons/fi';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   const { rooms, loading: roomsLoading, createRoom, joinRoom, deleteRoom } = useRooms(user?._id);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -199,13 +201,7 @@ export default function DashboardPage() {
                     <button
                       onClick={async (e) => {
                         e.stopPropagation();
-                        if (!confirm(`Are you sure you want to completely delete "${room.roomName}"? This action cannot be undone.`)) return;
-                        try {
-                          await deleteRoom(room._id);
-                          toast.success('Room deleted successfully!');
-                        } catch (err: any) {
-                          toast.error('Failed to delete room');
-                        }
+                        setRoomToDelete({ id: room._id, name: room.roomName });
                       }}
                       className="text-dark-600 hover:text-red-400 hover:bg-red-400/10 p-1.5 rounded-md transition-all z-10"
                       title="Delete Room"
@@ -230,6 +226,20 @@ export default function DashboardPage() {
         isOpen={showJoinModal}
         onClose={() => setShowJoinModal(false)}
         onSubmit={handleJoinRoom}
+      />
+
+      <ConfirmModal
+        isOpen={!!roomToDelete}
+        onClose={() => setRoomToDelete(null)}
+        onConfirm={async () => {
+          if (roomToDelete) {
+            await deleteRoom(roomToDelete.id);
+            toast.success('Room deleted successfully!');
+          }
+        }}
+        title="Delete Study Room"
+        message={`Are you sure you want to permanently delete "${roomToDelete?.name}"? All files, folders, and chat history will be lost forever.`}
+        confirmText="Delete Permanently"
       />
     </div>
   );
