@@ -43,5 +43,10 @@ export function useRooms(userId?: string) {
     return result;
   };
 
-  return { rooms, loading, error, createRoom, joinRoom, refetch: fetchRooms };
+  const deleteRoom = async (roomId: string) => {
+    await roomService.deleteRoom(roomId);
+    setRooms((prev) => prev.filter((r) => r._id !== roomId));
+  };
+
+  return { rooms, loading, error, createRoom, joinRoom, deleteRoom, refetch: fetchRooms };
 }

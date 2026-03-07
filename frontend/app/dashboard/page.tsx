@@ -16,13 +16,14 @@ import {
   FiShield,
   FiEdit3,
   FiEye,
+  FiTrash2,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { rooms, loading: roomsLoading, createRoom, joinRoom } = useRooms(user?._id);
+  const { rooms, loading: roomsLoading, createRoom, joinRoom, deleteRoom } = useRooms(user?._id);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
 
@@ -188,9 +189,30 @@ export default function DashboardPage() {
                     <span className="text-dark-400">{room.role}</span>
                   </div>
                 </div>
-                <p className="text-dark-500 text-xs">
-                  Created {new Date(room.createdAt).toLocaleDateString()}
-                </p>
+                <div className="flex items-center justify-between mt-auto">
+                  <p className="text-dark-500 text-xs mt-1">
+                    Created {new Date(room.createdAt).toLocaleDateString()}
+                  </p>
+
+                  {room.role === 'admin' && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!confirm(`Are you sure you want to completely delete "${room.roomName}"? This action cannot be undone.`)) return;
+                        try {
+                          await deleteRoom(room._id);
+                          toast.success('Room deleted successfully!');
+                        } catch (err: any) {
+                          toast.error('Failed to delete room');
+                        }
+                      }}
+                      className="text-dark-600 hover:text-red-400 hover:bg-red-400/10 p-1.5 rounded-md transition-all z-10"
+                      title="Delete Room"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
