@@ -92,6 +92,7 @@ export function MembersPanel({ isOpen, onClose, roomId, userRole }: MembersPanel
                 className="flex items-center gap-3 p-3 bg-dark-800/50 rounded-lg"
               >
                 {member.user.profilePicture ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={member.user.profilePicture}
                     alt={member.user.name}

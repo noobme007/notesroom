@@ -85,11 +85,12 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <FiBookOpen className="w-6 h-6 text-primary-400" />
             <span className="text-lg font-bold text-white">
-              StudyRoom<span className="text-primary-400"> AI (Updated)</span>
+              StudyRoom<span className="text-primary-400"> AI</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
             {user.profilePicture ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={user.profilePicture}
                 alt={user.name}
