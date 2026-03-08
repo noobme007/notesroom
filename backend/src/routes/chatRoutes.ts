@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { sendMessage, getChatHistory } from '../controllers/chatController';
+import { sendMessage, getChatHistory, clearChatHistory } from '../controllers/chatController';
 import { authenticate } from '../middleware/auth';
 import { requireRoomRole } from '../middleware/roomAccess';
 
@@ -12,6 +12,11 @@ router.get(
   '/rooms/:roomId/chat/history',
   requireRoomRole('admin', 'editor', 'viewer'),
   getChatHistory
+);
+router.delete(
+  '/rooms/:roomId/chat/history',
+  requireRoomRole('admin', 'editor', 'viewer'),
+  clearChatHistory
 );
 
 export default router;

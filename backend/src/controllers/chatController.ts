@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import { AuthRequest } from '../middleware/auth';
 import { ChatMessage, File, Room } from '../models';
 import { searchChunks } from '../services/vectorStore';
@@ -27,6 +28,17 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
 
     // Classify the query
     const queryType = classifyQuery(message);
+
+    // Fetch last 5 messages for context (isolated to this user)
+    const recentHistory = await ChatMessage.find({ roomId, userId })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('message response');
+
+    const history = (recentHistory || []).reverse().flatMap(m => [
+      { role: 'user' as const, content: m.message },
+      { role: 'assistant' as const, content: m.response }
+    ]);
 
     // Search for relevant chunks
     const relevantChunks = await searchChunks(roomId, message, 5);
@@ -60,6 +72,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
         relevantChunks: contextChunks,
         query: message,
         roomName: room.roomName,
+        history,
       });
 
       aiResponse = `Found relevant documents:\n\n${fileList}\n\n---\n\n${llmResponse}`;
@@ -74,6 +87,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
         relevantChunks: contextChunks,
         query: message,
         roomName: room.roomName,
+        history,
       });
     }
 
@@ -133,5 +147,23 @@ export const getChatHistory = async (req: AuthRequest, res: Response): Promise<v
   } catch (error) {
     console.error('Chat history error:', error);
     res.status(500).json({ error: 'Failed to get chat history' });
+  }
+};
+
+/**
+ * DELETE /api/rooms/:roomId/chat/history
+ * Clear chat history for the user in a room.
+ */
+export const clearChatHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user!._id;
+
+    await ChatMessage.deleteMany({ roomId, userId });
+
+    res.json({ message: 'Chat history cleared successfully' });
+  } catch (error) {
+    console.error('Clear chat error:', error);
+    res.status(500).json({ error: 'Failed to clear chat history' });
   }
 };

@@ -10,6 +10,7 @@ interface ChatContext {
   }>;
   query: string;
   roomName?: string;
+  history?: Array<{ role: 'user' | 'assistant'; content: string }>;
 }
 
 /**
@@ -17,7 +18,7 @@ interface ChatContext {
  */
 export const generateResponse = async (context: ChatContext): Promise<string> => {
   try {
-    const { relevantChunks, query, roomName } = context;
+    const { relevantChunks, query, roomName, history = [] } = context;
 
     // Build context from relevant chunks
     const contextText = relevantChunks
@@ -36,15 +37,18 @@ Guidelines:
 - Use markdown formatting for better readability.
 - When referencing content, mention which file it came from.`;
 
-    const userMessage = contextText
-      ? `Context from uploaded documents:\n\n${contextText}\n\n---\n\nUser Question: ${query}`
-      : `No relevant documents found for this query.\n\nUser Question: ${query}`;
+    const userInstructions = contextText
+      ? `Context from uploaded documents:\n\n${contextText}\n\n---\n\nPlease answer the user's question using the context above.`
+      : `No relevant documents found for this query. Please answer based on general knowledge if possible, but prioritize context if it were available.`;
+
+    const messages: any[] = [
+      { role: 'system', content: systemPrompt },
+      ...history,
+      { role: 'user', content: `${userInstructions}\n\nUser Question: ${query}` },
+    ];
 
     const completion = await groq.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
+      messages,
       model: 'llama-3.1-8b-instant',
       temperature: 0.7,
       max_tokens: 1024,

@@ -45,8 +45,18 @@ export function useChat(roomId: string) {
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const clearHistory = async () => {
+    if (!roomId) return;
+    try {
+      setSending(true);
+      await chatService.clearChatHistory(roomId);
+      setMessages([]);
+      toast.success('Chat history cleared');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to clear history');
+    } finally {
+      setSending(false);
+    }
   };
 
   return {
@@ -55,6 +65,7 @@ export function useChat(roomId: string) {
     sending,
     error,
     sendMessage,
+    clearHistory,
     messagesEndRef,
     scrollToBottom,
     refetch: fetchHistory,

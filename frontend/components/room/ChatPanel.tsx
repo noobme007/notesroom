@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FiSend, FiMessageSquare, FiFile, FiEye, FiDownload, FiLoader } from 'react-icons/fi';
+import { FiSend, FiMessageSquare, FiFile, FiEye, FiDownload, FiLoader, FiTrash2, FiX } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import { useChat } from '@/hooks/useChat';
 import { ChatMessage, FileReference } from '@/types';
+import { ConfirmModal } from '../modals/ConfirmModal';
 
 interface ChatPanelProps {
   roomId: string;
@@ -13,9 +14,10 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({ roomId, isOpen, onToggle }: ChatPanelProps) {
-  const { messages, loading, sending, error, sendMessage, messagesEndRef, scrollToBottom } =
+  const { messages, loading, sending, error, sendMessage, clearHistory, messagesEndRef, scrollToBottom } =
     useChat(roomId);
   const [input, setInput] = useState('');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -67,12 +69,24 @@ export function ChatPanel({ roomId, isOpen, onToggle }: ChatPanelProps) {
           <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce-subtle shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
           <h3 className="text-white font-bold tracking-tight">Cerebrum Assistant</h3>
         </div>
-        <button
-          onClick={onToggle}
-          className="text-dark-400 hover:text-white p-1 transition-colors"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-1">
+          {messages.length > 0 && (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="text-dark-400 hover:text-red-400 p-2 transition-colors"
+              title="Clear Conversation"
+              disabled={sending}
+            >
+              <FiTrash2 className="w-4 h-4" />
+            </button>
+          )}
+          <button
+            onClick={onToggle}
+            className="text-dark-400 hover:text-white p-2 transition-colors"
+          >
+            <FiX className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -145,6 +159,15 @@ export function ChatPanel({ roomId, isOpen, onToggle }: ChatPanelProps) {
           </button>
         </div>
       </form>
+
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={clearHistory}
+        title="Clear Conversation"
+        message="Are you sure you want to clear your private chat history? This action cannot be undone and the AI will lose current context."
+        confirmText="Clear History"
+      />
     </div>
   );
 }

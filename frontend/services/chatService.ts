@@ -23,4 +23,11 @@ export const chatService = {
     });
     return data;
   },
+
+  /**
+   * Clear chat history for a user in a room.
+   */
+  async clearChatHistory(roomId: string): Promise<void> {
+    await api.delete(`/rooms/${roomId}/chat/history`);
+  },
 };
