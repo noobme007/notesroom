@@ -24,6 +24,7 @@ import {
   FiTrash2,
   FiMenu,
   FiX,
+  FiDownload,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -175,6 +176,24 @@ export default function RoomPage({ params }: RoomPageProps) {
     });
   };
 
+  const handleDownloadZip = async () => {
+    try {
+      toast.loading('Preparing your zip...', { id: 'zip-download' });
+      const blob = await roomService.downloadRoomAsZip(roomId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${room.roomName.replace(/[^a-z0-9]/gi, '_')}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Download started!', { id: 'zip-download' });
+    } catch (err: any) {
+      toast.error('Failed to generate zip', { id: 'zip-download' });
+    }
+  };
+
   return (
     <div className="h-screen bg-dark-950 flex flex-col">
       {/* Top Bar */}
@@ -216,6 +235,14 @@ export default function RoomPage({ params }: RoomPageProps) {
               <span className="hidden sm:inline">Delete Room</span>
             </button>
           )}
+          <button
+            onClick={handleDownloadZip}
+            className="btn-ghost text-sm flex items-center gap-1.5 text-primary-400 hover:text-primary-300 hover:bg-primary-400/10"
+            title="Download Room as Zip"
+          >
+            <FiDownload className="w-4 h-4" />
+            <span className="hidden sm:inline">Download ZIP</span>
+          </button>
           <button
             onClick={() => setMembersOpen(true)}
             className="btn-ghost text-sm flex items-center gap-1.5"

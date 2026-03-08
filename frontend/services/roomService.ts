@@ -62,4 +62,14 @@ export const roomService = {
   async deleteRoom(roomId: string): Promise<void> {
     await api.delete(`/rooms/${roomId}`);
   },
+
+  /**
+   * Download all files in a room as a zip.
+   */
+  async downloadRoomAsZip(roomId: string): Promise<Blob> {
+    const { data } = await api.get(`/rooms/${roomId}/download`, {
+      responseType: 'blob',
+    });
+    return data;
+  },
 };

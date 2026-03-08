@@ -2,6 +2,8 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { Room, RoomMember, User, Folder, File, TextChunk, ChatMessage } from '../models';
 import { generateUniqueRoomCode } from '../utils/roomCode';
+import archiver from 'archiver';
+import { downloadFromCloudStorage } from '../services/storageService';
 
 /**
  * POST /api/rooms
@@ -273,5 +275,79 @@ export const deleteRoom = async (req: AuthRequest, res: Response): Promise<void>
   } catch (error) {
     console.error('Delete room error:', error);
     res.status(500).json({ error: 'Failed to delete room' });
+  }
+};
+
+/**
+ * GET /api/rooms/:id/download
+ * Download all files in the room as a zip.
+ */
+export const downloadRoomAsZip = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const room = await Room.findById(id);
+
+    if (!room) {
+      res.status(404).json({ error: 'Room not found' });
+      return;
+    }
+
+    // Fetch all folders
+    const folders = await Folder.find({ roomId: id });
+    const files = await File.find({ roomId: id });
+
+    // Set headers
+    const safeRoomName = room.roomName.replace(/[^a-z0-9]/gi, '_');
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeRoomName}.zip"`);
+
+    const archive = archiver('zip', {
+      zlib: { level: 9 }, // Maximum compression level
+    });
+
+    // Listen for warnings and errors
+    archive.on('warning', (err) => {
+      if (err.code === 'ENOENT') {
+        console.warn('Archiver warning:', err);
+      } else {
+        throw err;
+      }
+    });
+
+    archive.on('error', (err) => {
+      throw err;
+    });
+
+    // Pipe archive data to the response
+    archive.pipe(res);
+
+    // Group files by folder
+    const folderMap = new Map<string, typeof folders[0]>();
+    folders.forEach(f => folderMap.set(f._id.toString(), f));
+
+    for (const file of files) {
+      try {
+        const folder = folderMap.get(file.folderId.toString());
+        const folderName = folder ? folder.folderName : 'Uncategorized';
+
+        // Fetch file buffer from cloud storage
+        const fileBuffer = await downloadFromCloudStorage(file.storagePath);
+
+        // Add to zip relative to folder name
+        archive.append(fileBuffer, { name: `${folderName}/${file.fileName}` });
+      } catch (err) {
+        console.error(`Failed to add file ${file.fileName} to zip:`, err);
+        // Continue with other files even if one fails
+      }
+    }
+
+    // Finalize the archive
+    await archive.finalize();
+
+  } catch (error) {
+    console.error('Download zip error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate zip file' });
+    }
   }
 };

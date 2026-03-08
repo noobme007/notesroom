@@ -70,3 +70,18 @@ export const getSignedUrl = async (
 
   return data.signedUrl;
 };
+
+/**
+ * Download a file from Cloud Storage (Supabase).
+ */
+export const downloadFromCloudStorage = async (storagePath: string): Promise<Buffer> => {
+  const { data, error } = await supabase.storage.from(BUCKET_NAME).download(storagePath);
+
+  if (error || !data) {
+    console.error('Error downloading from Supabase:', error);
+    throw new Error('Could not download file from storage');
+  }
+
+  const arrayBuffer = await data.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+};
