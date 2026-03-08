@@ -306,7 +306,7 @@ export const downloadRoomAsZip = async (req: AuthRequest, res: Response): Promis
     });
 
     // Listen for warnings and errors
-    archive.on('warning', (err) => {
+    archive.on('warning', (err: any) => {
       if (err.code === 'ENOENT') {
         console.warn('Archiver warning:', err);
       } else {
@@ -314,7 +314,7 @@ export const downloadRoomAsZip = async (req: AuthRequest, res: Response): Promis
       }
     });
 
-    archive.on('error', (err) => {
+    archive.on('error', (err: any) => {
       throw err;
     });
 
