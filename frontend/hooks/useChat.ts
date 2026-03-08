@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { chatService } from '@/services/chatService';
 import { ChatMessage } from '@/types';
+import toast from 'react-hot-toast';
 
 export function useChat(roomId: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -57,6 +58,10 @@ export function useChat(roomId: string) {
     } finally {
       setSending(false);
     }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return {
