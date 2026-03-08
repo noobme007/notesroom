@@ -118,10 +118,10 @@ export function FileList({
                     )}
                   </p>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 md:opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <button
                     onClick={() => onPreview(file)}
-                    className="p-2 text-dark-400 hover:text-primary-400 hover:bg-dark-700 rounded-lg transition-colors"
+                    className="p-2 text-dark-400 hover:text-primary-400 hover:bg-primary-500/10 rounded-xl transition-all active:scale-95"
                     title="Preview"
                   >
                     <FiEye className="w-4 h-4" />
@@ -140,7 +140,7 @@ export function FileList({
                         toast.error('Failed to get download link');
                       }
                     }}
-                    className="p-2 text-dark-400 hover:text-green-400 hover:bg-dark-700 rounded-lg transition-colors"
+                    className="p-2 text-dark-400 hover:text-green-400 hover:bg-green-500/10 rounded-xl transition-all active:scale-95"
                     title="Download"
                   >
                     <FiDownload className="w-4 h-4" />
@@ -148,7 +148,7 @@ export function FileList({
                   {canDelete && (
                     <button
                       onClick={() => onDelete(file._id)}
-                      className="p-2 text-dark-400 hover:text-red-400 hover:bg-dark-700 rounded-lg transition-colors"
+                      className="p-2 text-dark-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all active:scale-95"
                       title="Delete"
                     >
                       <FiTrash2 className="w-4 h-4" />

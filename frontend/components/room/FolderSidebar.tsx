@@ -46,11 +46,14 @@ export function FolderSidebar({
   };
 
   return (
-    <div className="w-64 bg-dark-900/80 border-r border-dark-700 flex flex-col h-full">
+    <div className="w-72 bg-dark-900/90 md:bg-dark-900/80 backdrop-blur-xl border-r border-dark-700 flex flex-col h-full shadow-2xl md:shadow-none">
       {/* Room Header */}
-      <div className="p-4 border-b border-dark-700">
-        <h2 className="text-lg font-bold text-white truncate">{roomName}</h2>
-        <p className="text-dark-400 text-sm capitalize">{userRole}</p>
+      <div className="p-5 border-b border-dark-700/50">
+        <h2 className="text-xl font-bold text-white truncate tracking-tight">{roomName}</h2>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-pulse" />
+          <p className="text-dark-400 text-xs font-semibold uppercase tracking-widest">{userRole}</p>
+        </div>
       </div>
 
       {/* Folders Header */}
@@ -94,17 +97,15 @@ export function FolderSidebar({
           folders.map((folder) => (
             <div
               key={folder._id}
-              className={`group flex items-center gap-2 px-3 py-2 mx-2 my-0.5 rounded-lg cursor-pointer transition-colors ${
-                selectedFolderId === folder._id
-                  ? 'bg-primary-600/20 text-primary-300 border border-primary-500/30'
-                  : 'text-dark-300 hover:bg-dark-800 hover:text-white border border-transparent'
-              }`}
+              className={`group flex items-center gap-2 px-3 py-2 mx-2 my-0.5 rounded-lg cursor-pointer transition-colors ${selectedFolderId === folder._id
+                ? 'bg-primary-600/20 text-primary-300 border border-primary-500/30'
+                : 'text-dark-300 hover:bg-dark-800 hover:text-white border border-transparent'
+                }`}
               onClick={() => onSelectFolder(folder._id)}
             >
               <FiFolder
-                className={`w-4 h-4 flex-shrink-0 ${
-                  selectedFolderId === folder._id ? 'text-primary-400' : 'text-dark-400'
-                }`}
+                className={`w-4 h-4 flex-shrink-0 ${selectedFolderId === folder._id ? 'text-primary-400' : 'text-dark-400'
+                  }`}
               />
               <span className="flex-1 text-sm truncate">{folder.folderName}</span>
               {selectedFolderId === folder._id && (

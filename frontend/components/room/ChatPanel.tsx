@@ -55,12 +55,17 @@ export function ChatPanel({ roomId, isOpen, onToggle }: ChatPanelProps) {
   }
 
   return (
-    <div className="w-96 bg-dark-900/95 backdrop-blur-sm border-l border-dark-700 flex flex-col h-full animate-slide-in-right">
+    <div className={`
+      fixed inset-y-0 right-0 z-[60] md:z-20 md:relative w-full md:w-96
+      bg-dark-900/95 md:bg-dark-900/80 backdrop-blur-xl md:backdrop-blur-sm
+      border-l border-dark-700 flex flex-col h-full shadow-2xl transition-transform duration-500 ease-in-out
+      ${isOpen ? 'translate-x-0' : 'translate-x-full md:hidden'}
+    `}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-dark-700">
+      <div className="flex items-center justify-between px-4 py-3 sm:py-4 border-b border-dark-700">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          <h3 className="text-white font-semibold">StudyRoom AI</h3>
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce-subtle shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+          <h3 className="text-white font-bold tracking-tight">Cerebrum Assistant</h3>
         </div>
         <button
           onClick={onToggle}

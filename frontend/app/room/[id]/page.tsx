@@ -22,6 +22,8 @@ import {
   FiLoader,
   FiBookOpen,
   FiTrash2,
+  FiMenu,
+  FiX,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -41,6 +43,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   const [membersOpen, setMembersOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -175,23 +178,31 @@ export default function RoomPage({ params }: RoomPageProps) {
   return (
     <div className="h-screen bg-dark-950 flex flex-col">
       {/* Top Bar */}
-      <header className="border-b border-dark-800 bg-dark-900/80 backdrop-blur-sm px-4 py-2.5 flex items-center justify-between z-20 flex-shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="border-b border-dark-800 bg-dark-900/80 backdrop-blur-sm px-4 py-2 flex items-center justify-between z-30 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={() => router.push('/dashboard')}
             className="text-dark-400 hover:text-white p-1 transition-colors"
           >
             <FiArrowLeft className="w-5 h-5" />
           </button>
-          <FiBookOpen className="w-5 h-5 text-primary-400" />
-          <h1 className="text-white font-semibold truncate">{room.roomName}</h1>
+
+          <button
+            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+            className="md:hidden text-dark-400 hover:text-white p-1 transition-colors"
+          >
+            {mobileSidebarOpen ? <FiX className="w-5 h-5" /> : <FiMenu className="w-5 h-5" />}
+          </button>
+
+          <FiBookOpen className="w-5 h-5 text-primary-400 hidden sm:block" />
+          <h1 className="text-white font-semibold truncate max-w-[120px] sm:max-w-none">{room.roomName}</h1>
           <button
             onClick={copyCode}
             className="flex items-center gap-1 bg-dark-800 text-dark-300 hover:text-white px-2 py-0.5 rounded text-xs font-mono transition-colors"
             title="Copy room code"
           >
             <FiCopy className="w-3 h-3" />
-            {room.roomCode}
+            <span className="hidden xs:inline">{room.roomCode}</span>
           </button>
         </div>
         <div className="flex items-center gap-2">
@@ -224,17 +235,33 @@ export default function RoomPage({ params }: RoomPageProps) {
       </header>
 
       {/* Main Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Sidebar Overlay */}
+        {mobileSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 md:hidden animate-fade-in"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
+
         {/* Folder Sidebar */}
-        <FolderSidebar
-          folders={folders}
-          selectedFolderId={selectedFolderId}
-          onSelectFolder={setSelectedFolderId}
-          onCreateFolder={handleCreateFolder}
-          onDeleteFolder={handleDeleteFolder}
-          userRole={userRole}
-          roomName={room.roomName}
-        />
+        <div className={`
+          fixed md:relative z-30 md:z-auto h-full transition-transform duration-300 ease-in-out
+          ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}>
+          <FolderSidebar
+            folders={folders}
+            selectedFolderId={selectedFolderId}
+            onSelectFolder={(id) => {
+              setSelectedFolderId(id);
+              setMobileSidebarOpen(false);
+            }}
+            onCreateFolder={handleCreateFolder}
+            onDeleteFolder={handleDeleteFolder}
+            userRole={userRole}
+            roomName={room.roomName}
+          />
+        </div>
 
         {/* File List - Main Area */}
         <FileList
